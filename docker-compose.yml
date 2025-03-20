@@ -1,0 +1,14 @@
+#version: '3.8'  # Specifies the Docker Compose file format version
+
+services:
+  manus:
+      build:
+        context: ./manus         # Build context is the current directory
+        dockerfile: Dockerfile
+    image: python:3.12  # Uses official Python 3.9 slim image
+    #command: pip3 install -r /Users/kaur/PycharmProjects/OpenManus/requirements.txt   # Runs a simple HTTP server
+    ports:
+      - "8000:8000"       # Maps port 8000 on host to 8000 in container
+    volumes:
+      - /Users/kaur/PycharmProjects/OpenManus/manus:/var/lib/manus/        # Mounts local app folder to container
+
