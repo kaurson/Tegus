@@ -14,6 +14,8 @@ from app.tool.file_reader import FileReader
 from app.tool.summarizer import Summarizer
 from app.tool.ask_user import AskUser
 from app.tool.user_output import OutputUser
+from app.tool.generate_exercise import ExerciseGenerator
+from app.tool.check_solution import CheckSolution
 
 
 
@@ -41,7 +43,7 @@ class Manus(ToolCallAgent):
     # Add general-purpose tools to the tool collection
     available_tools: ToolCollection = Field(
         default_factory=lambda: ToolCollection(
-            PythonExecute(), WebSearch(), BrowserUseTool(), FileSaver(), Terminate(), FileReader(), RagSearch(), Summarizer(), AskUser(), OutputUser()
+            PythonExecute(), WebSearch(), BrowserUseTool(), FileSaver(), Terminate(), FileReader(), RagSearch(), Summarizer(), AskUser(), OutputUser(), ExerciseGenerator(), CheckSolution()
         )
     )
 
