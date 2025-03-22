@@ -3,7 +3,7 @@ import random
 from app.tool.base import BaseTool  # Ensure this import exists
 
 # Path to JSON file
-JSON_PATH = "C:\\Users\\henri\\OneDrive\\Desktop\\tegus\\zzzz\\exercise.json"
+JSON_PATH = "/Users/kaur/PycharmProjects/OpenManus/tegus/exercises.json"
 
 class ExerciseGenerator(BaseTool):
     name: str = "exercise_search"
