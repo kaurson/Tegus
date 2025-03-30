@@ -44,7 +44,6 @@ The tool accepts a file path, and returns the content of the file.
             directory = os.path.dirname(file_path)
             if directory and not os.path.exists(directory):
                 # Write directly to the file
-                read_dir = f"{directory}*"
                 async with aiofiles.open(directory, mode, encoding="utf-8") as file:
                     return f"Content extracted: \n {await file.read()}"
 

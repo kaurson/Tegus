@@ -1,4 +1,5 @@
 from typing import Any
+from datetime import datetime
 
 from pydantic import Field
 
@@ -6,14 +7,15 @@ from app.agent.toolcall import ToolCallAgent
 from app.prompt.manus import NEXT_STEP_PROMPT, SYSTEM_PROMPT
 from app.tool import Terminate, ToolCollection
 from app.tool.browser_use_tool import BrowserUseTool
-from app.tool.file_saver import FileSaver
-from app.tool.python_execute import PythonExecute
+#from app.tool.file_saver import FileSaver
+#from app.tool.python_execute import PythonExecute
 from app.tool.web_search import WebSearch
 from app.tool.rag_model import RagSearch
-from app.tool.file_reader import FileReader
-from app.tool.summarizer import Summarizer
-from app.tool.ask_user import AskUser
-from app.tool.user_output import OutputUser
+#from app.tool.file_reader import FileReader
+#from app.tool.ask_user import AskUser
+#from app.tool.user_output import OutputUser
+#from app.tool.write_to_db import WriteToDB
+from app.tool.check_solution import CheckSolution
 
 
 
@@ -36,12 +38,12 @@ class Manus(ToolCallAgent):
     next_step_prompt: str = NEXT_STEP_PROMPT
 
     max_observe: int = 2000
-    max_steps: int = 10
+    max_steps: int = 4
 
     # Add general-purpose tools to the tool collection
     available_tools: ToolCollection = Field(
         default_factory=lambda: ToolCollection(
-            PythonExecute(), WebSearch(), BrowserUseTool(), FileSaver(), Terminate(), FileReader(), RagSearch(), Summarizer(), AskUser(), OutputUser()
+            WebSearch(), BrowserUseTool(), Terminate(), RagSearch(), CheckSolution()#, AskUser() , WriteToDB() #, Summarizer(), PythonExecute(), FileSaver(), FileReader(), OutputUser()
         )
     )
 
@@ -51,3 +53,12 @@ class Manus(ToolCallAgent):
         else:
             await self.available_tools.get_tool(BrowserUseTool().name).cleanup()
             await super()._handle_special_tool(name, result, **kwargs)
+
+    async def _handle_terminate_tool(self, step_responses: dict, session_id: str, status: str):
+        # Update the database with only step_responses
+        update_data = {
+            "step_responses": step_responses,
+            "updated_at": datetime.now().isoformat()
+        }
+        
+        self.supabase.table("Lessons").update(update_data).eq("session_id", session_id).execute()

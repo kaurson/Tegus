@@ -1,13 +1,9 @@
-import os
-
-import aiofiles
-
 from app.tool.base import BaseTool
 
 
 class OutputUser(BaseTool):
     name: str = "output_user"
-    description: str = """Output content to the user"""
+    description: str = """Output content to the user. Output to user without including your own thoughts, only output text you want the user to see. Remove all unnecessary content from the output."""
     parameters: dict = {
         "type": "object",
         "properties": {
