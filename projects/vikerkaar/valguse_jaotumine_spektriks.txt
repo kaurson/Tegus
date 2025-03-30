@@ -1,0 +1,13 @@
+### Valguse jaotumine spektriks
+
+Valge valgus, nagu näiteks päikesevalgus, koosneb erinevatest lainepikkustest, mis vastavad erinevatele värvidele. Kui valgus läbib prismat või veepiisakesi, toimub valguse dispersioon, mille käigus valgus jaguneb järgmisteks värvideks:
+
+1. **Punane**
+2. **Oranž**
+3. **Kollane**
+4. **Roheline**
+5. **Sinine**
+6. **Indigo**
+7. **Violetne**
+
+Iga värv vastab teatud lainepikkusele, punane valgus on pikim ja violetne on lühim. See jaotus tekitab vikerkaare efekti, mida me näeme, kui valgus murdub ja peegeldub veepiisades.

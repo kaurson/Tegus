@@ -1,0 +1,12 @@
+### Valguse murdumine ja peegeldumine veepiisades
+
+**1. Valguse murdumine (Refraktsioon):**
+Valgus murdub, kui see liigub ühest keskkonnast teise, näiteks õhust vette. See juhtub, kuna valguse kiirus on erinev erinevates keskkondades. Veepiisades, kui valgus siseneb, aeglustub see ja muutub suunalt, mis muudab selle trajektoori. Murdumisseadus ütleb, et nurk, millega valgus murdub, sõltub keskkondade murdumisnäitajatest.
+
+**2. Valguse peegeldumine (Refleksioon):**
+Kui valgus jõuab veepiisade pinnale, peegeldub osa valgusest tagasi. Peegeldumise seadus ütleb, et peegeldunud nurk on võrdne sisenemisnurga (sisenemisel) ja see sõltub ka pinnast. Veepiisade puhul, kui valgus peegeldub, võib see tekitada erinevaid värve, mis on seotud valguse spektriga.
+
+**3. Vikerkaare teke:**
+Kombineerides murdumise ja peegeldumise, kui valgus siseneb veepiisasse, toimub nende protsesside järjestikune toimumine. Kui valgus murdub ja peegeldub veepiisades, jaguneb see erinevateks värvideks, luues vikerkaare efekti, mida me näeme taeval.
+
+See teaduslik seletus annab ülevaate, kuidas valgus murdub ja peegeldub veepiisades, luues vikerkaare nähtuse.

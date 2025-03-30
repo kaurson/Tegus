@@ -1,0 +1,9 @@
+{
+  "Valguse murdumise põhimõtted": [
+    "1. Valguse kiirus muutub erinevates keskkondades. Näiteks, valgus läbib õhku kiiremini kui vett või klaasi.",
+    "2. Murdumisseadus (Snelli seadus) määrab nurga, millega valgus murdub, sõltuvalt keskkondade murdumisnäitajatest.",
+    "3. Kui valgus läbib piiri kahe erineva keskkonna vahel, siis murdub see, muutes oma suunda. See juhtub, kui valgus liigub keskkonnast, mille murdumisnäitaja on madalam, keskkonda, mille murdumisnäitaja on kõrgem.",
+    "4. Näiteks, kui valgus liigub õhust vette, murdub see sissepoole, mistõttu see paistab 'kummarduvat' ja näib, et objektid vees asuvad kõrgemal või madalamal kui nad tegelikult on.",
+    "5. Valguse murdumist saab demonstreerida prismo või veepiisadega, mis jagavad valge valguse erinevatesse värvitoonidesse, luues vikerkaare."
+  ]
+}

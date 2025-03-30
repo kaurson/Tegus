@@ -1,0 +1,10 @@
+## Rööpühendus (Rail Connection) Definition
+
+- **Definition**: Rööpühendus refers to a parallel electrical connection where multiple devices are connected across the same voltage source.
+- **Function**: Each device receives the same voltage, allowing for simultaneous operation. If one device fails, the others continue to operate.
+- **Current Distribution**: The total current is divided among the connected devices, meaning each device may receive less current than the total supplied.
+- **Comparison with Series Connection**: In series connections, devices are connected one after the other, and the current must pass through each device sequentially, which is less common and can lead to total circuit failure if one device fails.
+- **Practical Example**: Household electrical systems often use parallel connections to ensure that if one light bulb burns out, other bulbs remain lit.
+
+### Importance
+- Rööpühendus is crucial for reliability in electrical systems, allowing for uninterrupted service even when individual components fail.
