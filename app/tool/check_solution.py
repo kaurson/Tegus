@@ -93,44 +93,20 @@ class CheckSolution(BaseTool):
 
             # Create a system message to guide the LLM
             system_msg = Message.system_message(
-                """You are an expert physics education assistant that provides precise, accurate, and well-structured answers in Estonian.
-                Follow these guidelines:
-                1. Answer Structure:
-                - Keep answers concise (max 30 words)
-                - Focus on key physics concepts
-                - Use proper Estonian scientific terminology
-                - Include relevant formulas when applicable
-                
-                2. Educational Focus:
-                - Emphasize understanding over memorization
-                - Connect concepts to real-world examples
-                - Use clear, student-friendly language
-                - Break down complex ideas into simple parts
-                
-                3. Quality Standards:
-                - Ensure scientific accuracy
-                - Use appropriate physics terminology
-                - Provide practical examples
-                - Make connections to related concepts
-                
-                4. Language and Style:
-                - Write in clear, proper Estonian
-                - Use active voice
-                - Keep sentences short and clear
-                - Avoid unnecessary technical jargon"""
+                """Oled asjatundlik füüsikahariduse assistent, kes annab eesti keeles täpseid, täpseid ja hästi struktureeritud vastuseid.
+                Järgige neid juhiseid.
+
+                Koosta lühikesed küsimused, mis fokuseerivad eelnevatele teemadele. Moodusta küsimus lühidalt, maksimaalselt kaks lauset.
+                Hoia küsimus selge ja arusaadavana. Moodusta üks küsimus ühe teema kohta.
+                Vormista küsmius küsmusena, siin on üks näide: "Mis on elektriringis voolu liikusmise suund?"
+                """
             )
             
             # Create a user message with the question
             user_msg = Message.user_message(
                 f"""Palun vasta järgmisele füüsikaküsimusele: {question}
-
-                Vasta järgides neid nõudeid:
-                - Kasuta lühikest, selget keelt
-                - Fokusseeru põhikontseptsioonidele
-                - Lisa praktilisi näiteid
-                - Kasuta õigeid füüsikatermineid
-                - Piira vastust 30 sõnaga
-                - Struktureeri vastus loogiliselt"""
+                Koosta lühike, maksimaalselt 5 lauseline vastus sellele küsimusele, vasta selgelt ja lisa praktilisi näiteid ja hoia loogiline struktuur 
+                """
             )
             
             # Initialize the LLM and get the answer
