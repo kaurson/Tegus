@@ -262,6 +262,6 @@ class MultipleChoiceExercise(BaseTool):
                 print(f"Error updating database: {update_response.error}")
                 
         except Exception as e:
-            print(f"Failed to store RagSearch result: {e}")
+            print(f"Failed to store MultipleChoiceExercise result: {e}")
             print(f"Session ID: {session_id}, Step Index: {step_index}")
             print(f"Response data: {response.data if 'response' in locals() else 'No response'}")
