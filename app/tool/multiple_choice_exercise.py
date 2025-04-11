@@ -22,7 +22,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 class MultipleChoiceExercise(BaseTool):
     name: str = "multiple_choice_exercise"
-    description: str = "A tool to retrieve exercises from a exercise database."
+    description: str = "A tool to retrieve multiple choice exercises from a database."
     session_id: Optional[str] = None
 
     parameters: dict = {
