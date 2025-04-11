@@ -20,7 +20,7 @@ DATA_PATH = os.getenv("MULTIPLECHOICE_CHROMA_DATABASE_PATH")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-class RagSearch(BaseTool):
+class MultipleChoiceExercise(BaseTool):
     name: str = "rag_search"
     description: str = "A tool to retrieve exercises from a exercise database."
     session_id: Optional[str] = None
