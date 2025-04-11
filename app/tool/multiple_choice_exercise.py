@@ -21,7 +21,7 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 class MultipleChoiceExercise(BaseTool):
-    name: str = "rag_search"
+    name: str = "multiple_choice_exercise"
     description: str = "A tool to retrieve exercises from a exercise database."
     session_id: Optional[str] = None
 
