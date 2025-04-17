@@ -17,7 +17,8 @@ from app.tool.rag_model import RagSearch
 #from app.tool.write_to_db import WriteToDB
 from app.tool.check_solution import CheckSolution
 from app.tool.multiple_choice_exercise import MultipleChoiceExercise
-
+from app.tool.true_false_exercise import TrueFalseExercise
+from app.tool.calculation_exercise import CalculationExercise
 
 
 
@@ -44,7 +45,7 @@ class Manus(ToolCallAgent):
     # Add general-purpose tools to the tool collection
     available_tools: ToolCollection = Field(
         default_factory=lambda: ToolCollection(
-            WebSearch(), BrowserUseTool(), Terminate(), RagSearch(), CheckSolution(), MultipleChoiceExercise()#, AskUser() , WriteToDB() #, Summarizer(), PythonExecute(), FileSaver(), FileReader(), OutputUser()
+            WebSearch(), BrowserUseTool(), Terminate(), RagSearch(), CheckSolution(), MultipleChoiceExercise(), TrueFalseExercise(), CalculationExercise()#, AskUser() , WriteToDB() #, Summarizer(), PythonExecute(), FileSaver(), FileReader(), OutputUser()
         )
     )
 
