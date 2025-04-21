@@ -56,7 +56,49 @@ class PlanningFlow(BaseFlow):
     def get_executor(self, step_type: Optional[str] = None) -> BaseAgent:
         if not self.agents:
             raise ValueError("No agents available")
+        
+        # Check if we have a session_id to track tool usage
+        if hasattr(self, 'session_id') and self.session_id:
+            import random
             
+            try:
+                # Get the last used tool from the database
+                response = self.supabase.table("Lessons").select("step_responses").eq("session_id", self.session_id).execute()
+                
+                if response.data and len(response.data) > 0:
+                    step_responses = response.data[0].get("step_responses", [])
+                    
+                    # Find the last completed step
+                    last_tool_type = None
+                    for step in reversed(step_responses):
+                        if step.get("status") == "finished" and "content" in step:
+                            content = step.get("content", {})
+                            if "tool_type" in content:
+                                last_tool_type = content.get("tool_type")
+                                break
+                    
+                    # If we found the last tool type and it matches the current step_type
+                    if last_tool_type and step_type and last_tool_type == step_type:
+                        logger.info(f"Same tool requested consecutively: {step_type}")
+                        
+                        # 50% chance to choose a different tool
+                        if random.random() < 0.5:
+                            logger.info(f"Randomizing tool selection instead of using {step_type} again")
+                            
+                            # Get all available tools except the last used one
+                            available_tools = [key for key in self.executor_keys if key != step_type and key in self.agents]
+                            
+                            if available_tools:
+                                # Choose a random alternative tool
+                                alternative_step_type = random.choice(available_tools)
+                                logger.info(f"Chose alternative tool: {alternative_step_type}")
+                                return self.agents[alternative_step_type]
+            
+            except Exception as e:
+                logger.error(f"Error checking last tool usage: {e}")
+                # Continue with normal tool selection if check fails
+        
+        # Normal tool selection logic
         if step_type and step_type in self.agents:
             return self.agents[step_type]
         
@@ -91,16 +133,18 @@ class PlanningFlow(BaseFlow):
                 "steps": steps,
                 "step_statuses": ["not_started"] * len(steps),
                 "step_responses": [
-                                    {   "step_index": i,
+                                    {   "step_index": i +1,
                                         "status": "not_started",
                                         "content": {"timestamp":None,
                                                     "type": None,
                                                     "content":""}
                                         
                                     } for i in range(len(steps))
+                                    
                                 ],
                 "created_at": datetime.now().isoformat()
             }
+            
             
             try:
                 result = self.supabase.table("Lessons").insert(plan_data).execute()
@@ -183,7 +227,13 @@ class PlanningFlow(BaseFlow):
                 step_info["type"] = "general"
             
             step_statuses[step_id] = "in_progress"
-            self.supabase.table("Lessons").update({"step_statuses": step_statuses}).eq("session_id", session_id).execute()
+            try:
+                self.supabase.table("Lessons").update({"step_statuses": step_statuses}).eq("session_id", session_id).execute()
+                # Modern Supabase client doesn't have .error attribute
+                # Instead, it raises exceptions on errors
+            except Exception as update_error:
+                logger.error(f"Error updating step status: {update_error}")
+                
             return step_id, step_info
                     
             
@@ -201,7 +251,13 @@ class PlanningFlow(BaseFlow):
         step_text = step_info["text"]
         step_type = step_info["type"]
         
+        # Get the appropriate executor for this step type
         executor = self.get_executor(step_type)
+        
+        # Store the current step index in the executor for tools to access
+        executor.current_step_index = current_step_index
+        executor.session_id = session_id
+        
         plan_status = await self._get_plan_text(self.session_id)
         
         step_prompt = f"""
@@ -216,12 +272,40 @@ class PlanningFlow(BaseFlow):
         """
         
         try:
+            # Check the agent's state before running
+            initial_state = executor.state
+            
+            # Run the step
             step_result = await executor.run(step_prompt)
-
-            # Check if the result was from a terminate tool
-            if "terminate" in step_result.lower():
+            
+            # Check if the agent's state changed to FINISHED (terminate was called)
+            if executor.state != initial_state and executor.state == AgentState.FINISHED:
+                logger.info("Agent state changed to FINISHED - terminate tool was used")
                 await self._mark_step_completed()
-                logger.info("Terminate tool was used. Ending execution.")
+                
+                # Mark all remaining steps as skipped
+                try:
+                    response = self.supabase.table("Lessons").select("step_statuses").eq("session_id", session_id).execute()
+                    if response.data and len(response.data) > 0:
+                        step_statuses = response.data[0].get("step_statuses", [])
+                        
+                        # Mark all remaining steps as skipped
+                        for i in range(current_step_index + 1, len(step_statuses)):
+                            step_statuses[i] = "skipped"
+                        
+                        # Update the database
+                        self.supabase.table("Lessons").update({
+                            "step_statuses": step_statuses
+                        }).eq("session_id", session_id).execute()
+                except Exception as e:
+                    logger.error(f"Error updating remaining steps as skipped: {e}")
+                
+                return "Execution terminated by agent."
+            
+            # Also check the result string for "terminate" as a fallback
+            if isinstance(step_result, str) and "terminate" in step_result.lower():
+                await self._mark_step_completed()
+                logger.info("Terminate tool was used (detected in result string). Ending execution.")
                 return "Execution terminated."
 
             # Format the output based on the tool used
@@ -248,7 +332,6 @@ class PlanningFlow(BaseFlow):
                         "status": status,
                         "content": {
                             "timestamp": int(datetime.now().timestamp()),
-                            "type": "rag_search",
                             "content": content
                         }
                     })

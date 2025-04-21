@@ -4,7 +4,7 @@ import os
 
 load_dotenv()
 session_id = ""
-url = f"http://localhost:8000/execute-step"
+url = f"http://localhost:8001/execute-step"
 api_key = os.getenv("FLASK_API_KEY")  # Replace with your actual env variable name
 
 headers = {

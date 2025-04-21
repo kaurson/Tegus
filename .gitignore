@@ -186,3 +186,5 @@ OpenManus/app/tool/.env
 tegus/venv/*
 config/config.toml
 examples
+.env_prod
+projects

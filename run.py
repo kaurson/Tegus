@@ -10,9 +10,11 @@ import time
 from typing import Dict, List, Optional, Union
 import uuid
 import json
+from fastapi.middleware.cors import CORSMiddleware
 
 
 
+from app.schema import Message
 from app.agent.manus import Manus
 from app.tool import ToolCollection
 from app.flow.base import FlowType
@@ -25,11 +27,20 @@ from app.tool.web_search import WebSearch
 from app.tool.rag_model import RagSearch
 from app.agent.base import BaseAgent
 from app.tool.test_rag import rag
+from app.llm import LLM
 
 load_dotenv(find_dotenv())
 
 logging.basicConfig(filename='/opt/logs/record.log', level=logging.DEBUG)
 app = FastAPI()
+# Configure CORS to allow all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 API_KEY = os.getenv("FLASK_API_KEY", "default-keasdfalsfjadsfkdakfkdsy")
 
@@ -38,6 +49,8 @@ def verify_api_key(provided_key: str) -> bool:
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -133,8 +146,24 @@ class RagRequest(BaseModel):
 class RagResponse(BaseModel):
     response: str
 
+
+
+
 @app.post("/rag")
 async def get_rag(request:RagRequest):
     results = rag(request.query)
     return await results
+
+
+class Teacher(BaseModel):
+    query:str
+@app.post("/teacher")
+async def ask_teacher(request:Teacher):
+    ASK_TEACHER_POMPT = Message.system_message("""Sa oled väga hea abiõpetaja ja suudad vastata kõikidel kasutaja küsimustele. Vasta lühidalt ja otsekoheselt. Hoia vastused lihtsad ja vast kuni 10klassi teadmiste piires""")
+    USER_ASK_TEACHER = Message.user_message(f"""Palun vasta minu küsimusele: {request.query}""")
+    opetaja = LLM()
+    return await opetaja.ask(
+        messages=[USER_ASK_TEACHER],
+        system_msgs=[ASK_TEACHER_POMPT]
+    )
 

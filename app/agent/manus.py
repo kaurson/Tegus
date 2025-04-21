@@ -16,6 +16,9 @@ from app.tool.rag_model import RagSearch
 #from app.tool.user_output import OutputUser
 #from app.tool.write_to_db import WriteToDB
 from app.tool.check_solution import CheckSolution
+from app.tool.multiple_choise_exercise import MultipleChoiceExercise
+from app.tool.true_false_exercise import TrueFalseExercise
+from app.tool.calculation_exercise import CalculationExercise
 
 
 
@@ -38,12 +41,12 @@ class Manus(ToolCallAgent):
     next_step_prompt: str = NEXT_STEP_PROMPT
 
     max_observe: int = 2000
-    max_steps: int = 5
+    max_steps: int = 7
 
     # Add general-purpose tools to the tool collection
     available_tools: ToolCollection = Field(
         default_factory=lambda: ToolCollection(
-            WebSearch(), BrowserUseTool(), Terminate(), RagSearch(), CheckSolution()#, AskUser() , WriteToDB() #, Summarizer(), PythonExecute(), FileSaver(), FileReader(), OutputUser()
+            WebSearch(), Terminate(), RagSearch(), CheckSolution(), MultipleChoiceExercise(), TrueFalseExercise(), CalculationExercise()#, AskUser() , WriteToDB() #, Summarizer(), PythonExecute(), FileSaver(), FileReader(), OutputUser(), BrowserUseTool()
         )
     )
 
@@ -51,14 +54,31 @@ class Manus(ToolCallAgent):
         if not self._is_special_tool(name):
             return
         else:
-            await self.available_tools.get_tool(BrowserUseTool().name).cleanup()
+            # Safely handle browser tool cleanup if it exists
+            try:
+                browser_tool = self.available_tools.get_tool(BrowserUseTool().name)
+                if browser_tool is not None:
+                    await browser_tool.cleanup()
+            except Exception as e:
+                print(f"Warning: Could not cleanup browser tool: {e}")
+                
             await super()._handle_special_tool(name, result, **kwargs)
 
-    async def _handle_terminate_tool(self, step_responses: dict, session_id: str, status: str):
+    async def _handle_terminate_tool(self, step_responses=None, session_id=None, status="success"):
+        # Handle case when terminate is called early (before steps are finished)
+        if step_responses is None or session_id is None:
+            print("Terminate called before steps were completed - no database update needed")
+            return
+            
         # Update the database with only step_responses
         update_data = {
             "step_responses": step_responses,
             "updated_at": datetime.now().isoformat()
         }
         
-        self.supabase.table("Lessons").update(update_data).eq("session_id", session_id).execute()
+        try:
+            self.supabase.table("Lessons").update(update_data).eq("session_id", session_id).execute()
+            # Modern Supabase client doesn't have .error attribute
+            # Instead, it raises exceptions on errors
+        except Exception as update_error:
+            print(f"Error updating database in terminate tool: {update_error}")

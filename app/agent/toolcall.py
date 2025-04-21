@@ -140,21 +140,32 @@ class ToolCallAgent(ReActAgent):
         try:
             # Parse arguments
             args = json.loads(command.function.arguments or "{}")
-
+            
+            # Check if this is a special tool like terminate
+            is_terminate = name.lower() == "terminate"
+            
             # Execute the tool
             logger.info(f"🔧 Activating tool: '{name}'...")
             result = await self.available_tools.execute(name=name, tool_input=args)
-
+            
             # Format result for display
             observation = (
                 f"Observed output of cmd `{name}` executed:\n{str(result)}"
                 if result
                 else f"Cmd `{name}` completed with no output"
             )
-
-            # Handle special tools like `finish`
-            await self._handle_special_tool(name=name, result=result)
-
+            
+            # Handle special tools like terminate
+            if self._is_special_tool(name):
+                logger.info(f"🚨 Special tool '{name}' detected, handling...")
+                await self._handle_special_tool(name=name, result=result, **args)
+                
+                # If this is the terminate tool, set state to FINISHED
+                if is_terminate:
+                    logger.info("🛑 Terminate tool called, ending execution")
+                    self.state = AgentState.FINISHED
+                    return f"Terminated: {result}"
+            
             return observation
         except json.JSONDecodeError:
             error_msg = f"Error parsing arguments for {name}: Invalid JSON format"

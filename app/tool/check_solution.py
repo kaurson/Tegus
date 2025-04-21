@@ -14,6 +14,28 @@ load_dotenv(find_dotenv())
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
+#def get_prompt(agent_name):
+    
+#    try:
+#        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+#        response = supabase.table("prompts").select("*").eq("users", agent_name).execute()
+#        response = supabase.table("prompts").select("*").eq("user", agent_name).execute()
+
+
+#        if response.data and len(response.data) > 0:
+#            return response.data[0]["system_prompt"], response.data[0]["user_secondary_prompt"]
+#        else:
+#            print(f"No prompts found for agent: {agent_name}, using default prompts")
+#            return DEFAULT_SYSTEM_PROMPT, DEFAULT_USER_PROMPT
+#    except Exception as e:
+#        print(f"Error fetching prompts from database: {e}")
+#        return DEFAULT_SYSTEM_PROMPT, DEFAULT_USER_PROMPT
+
+# Default prompt as fallback
+
+# Fetch prompts from database
+#SYSTEM_PROMPT, USER_PROMPT = get_prompt("check_solution")
+
 class CheckSolution(BaseTool):
     name: str = "check_solution"
     description: str = """Generate an answer to the provided question/exercise using an LLM 
@@ -33,7 +55,7 @@ class CheckSolution(BaseTool):
             },
             "step_index": {
                 "type": "integer",
-                "description": "The current step index as a number (0-based)",
+                "description": "The current step index as a number ",
             }
         },
         "required": ["question", "session_id", "step_index"],
@@ -54,6 +76,24 @@ class CheckSolution(BaseTool):
         # Extract and validate additional parameters
         session_id = kwargs.get("session_id")
         step_index = kwargs.get("step_index")
+        
+        # If the caller didn't provide a step_index but we're in an agent with a current_step_index, use that
+        # This ensures we're always using the correct step index from the planning flow
+        import inspect
+        frame = inspect.currentframe()
+        try:
+            while frame:
+                if 'self' in frame.f_locals and hasattr(frame.f_locals['self'], 'current_step_index'):
+                    agent = frame.f_locals['self']
+                    if agent.current_step_index is not None and hasattr(agent, 'session_id'):
+                        print(f"Using step_index {agent.current_step_index} from agent instead of {step_index}")
+                        step_index = agent.current_step_index
+                        if not session_id and agent.session_id:
+                            session_id = agent.session_id
+                        break
+                frame = frame.f_back
+        finally:
+            del frame  # Avoid reference cycles
 
         if not all([question, session_id, step_index is not None]):
             print(f"Missing parameters: question={question}, session_id={session_id}, step_index={step_index}")
@@ -87,37 +127,46 @@ class CheckSolution(BaseTool):
     async def _get_llm_answer(self, question: str) -> str:
         """Generate an answer to the question using an LLM."""
         try:
-            # Import necessary modules for LLM interaction
             from app.schema import Message
             from app.llm import LLM
+            DEFAULT_SYSTEM_PROMPT = """Oled ekspert füüsikaõpetaja, kes aitab 9. klassi õpilastel füüsikat õppida.
+            Sinu ülesanne on vastata õpilaste küsimustele selgelt, täpselt ja arusaadavalt.
 
-            # Create a system message to guide the LLM
-            system_msg = Message.system_message(
-                """Oled asjatundlik füüsikahariduse assistent, kes annab eesti keeles täpseid, täpseid ja hästi struktureeritud vastuseid.
-                Järgige neid juhiseid.
 
-                Koosta lühikesed küsimused, mis fokuseerivad eelnevatele teemadele. Moodusta küsimus lühidalt, maksimaalselt kaks lauset.
-                Hoia küsimus selge ja arusaadavana. Moodusta üks küsimus ühe teema kohta.
-                Vormista küsmius küsmusena, siin on üks näide: "Mis on elektriringis voolu liikusmise suund?"
-                """
-            )
-            
+            Järgi neid juhiseid vastamisel:
+            1. Kasuta lihtsat ja arusaadavat keelt, vältides keerulisi termineid, kui need pole hädavajalikud
+            2. Selgita mõisteid ja nähtusi põhjalikult, tuues näiteid igapäevaelust
+            3. Kui küsimus on ebatäpne või mitmeti mõistetav, vasta kõige tõenäolisema tõlgenduse põhjal
+            4. Kui küsimus sisaldab väärarusaamu, paranda need sõbralikult ja selgita õiget arusaama
+            5. Kui sa ei tea vastust või küsimus väljub 9. klassi füüsika teemade raamest, ütle seda ausalt
+
+            Vastused peavad olema:
+            - Faktiliselt korrektsed ja kooskõlas teadusliku arusaamaga
+            - Kohandatud 9. klassi õpilase teadmiste tasemele
+            - Struktureeritud ja loogilised
+            - Lühikesed ja konkreetsed, kuid siiski piisavalt põhjalikud
+            - Huvitavad ja motiveerivad edasi õppima"""
+
+            DEFAULT_USER_PROMPT = """Palun vasta järgmisele füüsikaküsimusele: {question}
+                Koosta lühike, maksimaalselt 5 lauseline vastus sellele küsimusele, vasta selgelt ja lisa praktilisi näiteid ja hoia loogiline struktuur """
+            # Create system message for the LLM
+            system_msg = Message.system_message(DEFAULT_SYSTEM_PROMPT)
+
             # Create a user message with the question
             user_msg = Message.user_message(
-                f"""Palun vasta järgmisele füüsikaküsimusele: {question}
-                Koosta lühike, maksimaalselt 5 lauseline vastus sellele küsimusele, vasta selgelt ja lisa praktilisi näiteid ja hoia loogiline struktuur 
-                """
+                DEFAULT_USER_PROMPT.format(question=question)
             )
-            
+
             # Initialize the LLM and get the answer
             llm = LLM()
             answer = await llm.ask(
                 messages=[user_msg],
-                system_msgs=[system_msg]
+                system_msgs=[system_msg],
+                stream=False  # It's usually better to get the full answer at once
             )
-            
+
             return answer.strip()
-            
+
         except Exception as e:
             print(f"Error generating LLM answer: {e}")
             return "Error: Could not generate an answer"
@@ -141,7 +190,14 @@ class CheckSolution(BaseTool):
                 
             # Get existing events
             existing_content = step_responses[step_index].get("content", {})
+            # Make sure we're getting events from the correct place in the structure
             existing_events = existing_content.get("events", [])
+            if not existing_events and isinstance(existing_content, dict):
+                # Try to find events in nested content if needed
+                for key, value in existing_content.items():
+                    if isinstance(value, dict) and "events" in value:
+                        existing_events = value.get("events", [])
+                        break
             
             # Create timestamp for the event
             timestamp = datetime.utcnow().isoformat()
@@ -157,23 +213,27 @@ class CheckSolution(BaseTool):
     
             }
             
-            # Update the specific step response
-            step_responses[step_index].update({
+            # Update the specific step response - completely replace the content structure
+            # to avoid nested content issues
+            step_responses[step_index] = {
                 "status": "finished",
                 "step_index": step_index,
                 "content": {
+                    "tool_type": "check_solution",
                     "events": existing_events + [new_event]
-                    
                 }
-            })
+            }
             
             # Update the entire step_responses array
-            update_response = self.supabase.table("Lessons").update({
-                "step_responses": step_responses
-            }).eq("session_id", session_id).execute()
-            
-            if update_response.error:
-                print(f"Error updating database: {update_response.error}")
+            try:
+                update_response = self.supabase.table("Lessons").update({
+                    "step_responses": step_responses
+                }).eq("session_id", session_id).execute()
+                
+                # Modern Supabase client doesn't have .error attribute
+                # Instead, it raises exceptions on errors
+            except Exception as update_error:
+                print(f"Error updating database: {update_error}")
                 
         except Exception as e:
             print(f"Failed to store CheckSolution result: {e}")

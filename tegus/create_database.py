@@ -10,8 +10,8 @@ from langchain_community.vectorstores import Chroma # Chroma in an open-source e
 
 _ = load_dotenv(find_dotenv()) # read local .env file
 my_api_key = os.environ['OPENAI_API_KEY']
-CHROMA_PATH = "kusimused_db"
-DATA_PATH = "data/kusimused"
+CHROMA_PATH = "multiple_choise_db"
+DATA_PATH = "data/multiple_choise"
 
 def generate_data_store():
     documents = load_documents()
