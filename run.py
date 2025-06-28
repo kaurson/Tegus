@@ -155,7 +155,7 @@ async def health_check():
         # Basic health check - you can add more sophisticated checks here
         # like database connectivity, external service availability, etc.
         return {
-            "status": "healthy",
+            "status": "healthy2",
             "timestamp": datetime.datetime.utcnow().isoformat(),
             "service": "Tegus Backend API",
             "version": "1.0.0"
